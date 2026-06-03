@@ -1,5 +1,5 @@
 import { useEffect, useRef, useMemo } from "react";
-import { MapPin, Star, GitFork, Users, BookOpen, ArrowRight, TrendingUp, Award } from "lucide-react";
+import { MapPin, Star, GitFork, Users, BookOpen, ArrowRight, TrendingUp, Award, Search } from "lucide-react";
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
 import { getLanguageColor } from "../utils/formatters.js";
 
@@ -108,12 +108,20 @@ export default function Dashboard({ user, repos = [], onNavigate, screens }) {
           <h1 className="text-slate-800 font-bold text-xl">Profile Dashboard</h1>
           <p className="text-slate-400 text-xs mt-0.5">Last updated: just now</p>
         </div>
-        <button
-          onClick={() => onNavigate(screens.SUGGESTIONS)}
-          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-purple-600 bg-purple-50 border border-purple-200 hover:bg-purple-100 transition-colors"
-        >
-          <TrendingUp size={13} /> Get AI Insights
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onNavigate(screens.LOGIN)}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-600 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-colors"
+          >
+            <Search size={13} /> Search New Profile
+          </button>
+          <button
+            onClick={() => onNavigate(screens.SUGGESTIONS)}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-purple-600 bg-purple-50 border border-purple-200 hover:bg-purple-100 transition-colors"
+          >
+            <TrendingUp size={13} /> Get AI Insights
+          </button>
+        </div>
       </div>
 
       {/* Profile + Score row */}

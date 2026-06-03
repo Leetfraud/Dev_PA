@@ -49,10 +49,14 @@ export default function App() {
       setScreen(SCREENS.DASHBOARD);
     } catch (err) {
       setError(err.message || "Failed to fetch user data. Please try again.");
-      setScreen(SCREENS.LOGIN);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearchNew = () => {
+    setError(null);
+    setScreen(SCREENS.LOGIN);
   };
 
   const handleUseMockData = () => {
@@ -92,7 +96,13 @@ export default function App() {
     <div className="flex h-screen bg-slate-50 font-mono overflow-hidden">
       <Sidebar
         active={screen}
-        onNavigate={setScreen}
+        onNavigate={(newScreen) => {
+          if (newScreen === SCREENS.LOGIN) {
+            handleSearchNew();
+          } else {
+            setScreen(newScreen);
+          }
+        }}
         screens={SCREENS}
         onLogout={handleLogout}
       />
@@ -101,7 +111,13 @@ export default function App() {
           <Dashboard
             user={user}
             repos={repos}
-            onNavigate={setScreen}
+            onNavigate={(newScreen) => {
+              if (newScreen === SCREENS.LOGIN) {
+                handleSearchNew();
+              } else {
+                setScreen(newScreen);
+              }
+            }}
             screens={SCREENS}
           />
         )}

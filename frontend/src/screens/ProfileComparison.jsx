@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Search, Star, GitFork, Users, BookOpen, Trophy, Minus } from "lucide-react";
+import { Search, Star, GitFork, Users, BookOpen, Trophy, Minus, Loader } from "lucide-react";
+import { githubApi } from "../services/githubApi";
 
-const profileA = {
+const defaultProfileA = {
   login: "torvalds",
   name: "Linus Torvalds",
   avatar_url: "https://avatars.githubusercontent.com/u/1024025?v=4",
@@ -15,7 +16,7 @@ const profileA = {
   top_lang: "C",
 };
 
-const profileB = {
+const defaultProfileB = {
   login: "gvanrossum",
   name: "Guido van Rossum",
   avatar_url: "https://avatars.githubusercontent.com/u/2894642?v=4",
@@ -101,7 +102,80 @@ function MetricRow({ metric, a, b }) {
 }
 
 export default function ProfileComparison({ onSearchProfile }) {
+  const [profileA, setProfileA] = useState(defaultProfileA);
+  const [profileB, setProfileB] = useState(defaultProfileB);
+  const [searchA, setSearchA] = useState("");
   const [searchB, setSearchB] = useState("");
+  const [loadingA, setLoadingA] = useState(false);
+  const [loadingB, setLoadingB] = useState(false);
+  const [errorA, setErrorA] = useState(null);
+  const [errorB, setErrorB] = useState(null);
+
+  const handleSearchA = async (e) => {
+    e.preventDefault();
+    if (!searchA.trim()) return;
+    
+    setLoadingA(true);
+    setErrorA(null);
+    try {
+      const userData = await githubApi.getUser(searchA.trim());
+      const reposData = await githubApi.getUserRepos(searchA.trim());
+      const stats = githubApi.calculateStats(userData, reposData);
+      const score = githubApi.calculatePortfolioScore(userData, reposData);
+      
+      setProfileA({
+        login: userData.login,
+        name: userData.name || userData.login,
+        avatar_url: userData.avatar_url,
+        bio: userData.bio || "No bio available",
+        public_repos: userData.public_repos,
+        followers: userData.followers,
+        following: userData.following,
+        total_stars: stats.total_stars,
+        total_forks: stats.total_forks,
+        portfolio_score: score,
+        top_lang: stats.most_used_language || "N/A",
+      });
+      setSearchA("");
+    } catch (err) {
+      setErrorA(err.message || "Failed to fetch profile");
+    } finally {
+      setLoadingA(false);
+    }
+  };
+
+  const handleSearchB = async (e) => {
+    e.preventDefault();
+    if (!searchB.trim()) return;
+    
+    setLoadingB(true);
+    setErrorB(null);
+    try {
+      const userData = await githubApi.getUser(searchB.trim());
+      const reposData = await githubApi.getUserRepos(searchB.trim());
+      const stats = githubApi.calculateStats(userData, reposData);
+      const score = githubApi.calculatePortfolioScore(userData, reposData);
+      
+      setProfileB({
+        login: userData.login,
+        name: userData.name || userData.login,
+        avatar_url: userData.avatar_url,
+        bio: userData.bio || "No bio available",
+        public_repos: userData.public_repos,
+        followers: userData.followers,
+        following: userData.following,
+        total_stars: stats.total_stars,
+        total_forks: stats.total_forks,
+        portfolio_score: score,
+        top_lang: stats.most_used_language || "N/A",
+      });
+      setSearchB("");
+    } catch (err) {
+      setErrorB(err.message || "Failed to fetch profile");
+    } finally {
+      setLoadingB(false);
+    }
+  };
 
   const aScore = metrics.filter((m) => profileA[m.key] > profileB[m.key]).length;
   const bScore = metrics.filter((m) => profileB[m.key] > profileA[m.key]).length;
@@ -132,6 +206,22 @@ export default function ProfileComparison({ onSearchProfile }) {
         {/* Profile headers */}
         <div className="grid grid-cols-3 gap-0 bg-slate-50/60 border-b border-slate-100">
           <div className="p-6">
+            {/* A search */}
+            <form onSubmit={handleSearchA} className="mb-4">
+              <div className="relative">
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchA}
+                  onChange={(e) => setSearchA(e.target.value)}
+                  placeholder="Search profile A..."
+                  disabled={loadingA}
+                  className="w-full text-xs bg-white border border-slate-200 rounded-lg pl-7 pr-3 py-1.5 outline-none focus:border-cyan-400 transition-colors disabled:opacity-50"
+                />
+                {loadingA && <Loader size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-500 animate-spin" />}
+              </div>
+              {errorA && <p className="text-xs text-red-500 mt-1">{errorA}</p>}
+            </form>
             <ProfileHeader profile={profileA} side="a" />
           </div>
           <div className="flex items-center justify-center p-4">
@@ -144,18 +234,21 @@ export default function ProfileComparison({ onSearchProfile }) {
           </div>
           <div className="p-6">
             {/* B search */}
-            <div className="mb-4">
+            <form onSubmit={handleSearchB} className="mb-4">
               <div className="relative">
                 <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={searchB}
                   onChange={(e) => setSearchB(e.target.value)}
-                  placeholder="Search profile..."
-                  className="w-full text-xs bg-white border border-slate-200 rounded-lg pl-7 pr-3 py-1.5 outline-none focus:border-cyan-400 transition-colors"
+                  placeholder="Search profile B..."
+                  disabled={loadingB}
+                  className="w-full text-xs bg-white border border-slate-200 rounded-lg pl-7 pr-3 py-1.5 outline-none focus:border-cyan-400 transition-colors disabled:opacity-50"
                 />
+                {loadingB && <Loader size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-500 animate-spin" />}
               </div>
-            </div>
+              {errorB && <p className="text-xs text-red-500 mt-1">{errorB}</p>}
+            </form>
             <ProfileHeader profile={profileB} side="b" />
           </div>
         </div>
